@@ -1,0 +1,43 @@
+[flake8]
+max-line-length = 222
+extend-ignore =
+    E203,  # Whitespace before ':'
+    W503,  # Line break before binary operator
+    D100,  # Missing docstring in public module
+    D101,  # Missing docstring in public class
+    D102,  # Missing docstring in public method
+    D103,  # Missing docstring in public function
+    D104,  # Missing docstring in public package
+    D105,  # Missing docstring in magic method
+    D107,  # Missing docstring in __init__
+    D200,  # One-line docstring should fit on one line
+    D202,  # No blank lines allowed after function docstring
+    D205,  # 1 blank line required between summary line and description
+    D400,  # First line should end with a period
+    D401,  # First line should be in imperative mood
+    D412,  # No blank lines allowed between a section header and its content
+    E402,  # Module level import not at top of file
+    F541,  # F-string is missing placeholders (these are intentional in code generation)
+    F841,  # Local variable assigned but never used (in tests)
+    B001,  # Do not use bare except (in examples)
+    B007,  # Loop control variable not used (in tests)
+    E722,  # Do not use bare except
+    SIM102,  # Use a single if-statement
+    SIM105,  # Use contextlib.suppress
+    SIM114,  # Use logical or
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    .venv,
+    .eggs,
+    *.egg-info
+per-file-ignores =
+    # Allow long lines in generated files
+    src/validated_llm/tasks/prompt_to_task_generated/*.py:E501
+    # Allow missing docstrings in tests
+    tests/*.py:D
+    tools/tests/*.py:D
+    # Allow bare except in examples
+    examples/*.py:B001,E722

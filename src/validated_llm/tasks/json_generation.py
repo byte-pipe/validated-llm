@@ -206,6 +206,9 @@ class JSONSchemaValidator(BaseValidator):
             return ValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
         # Validate against schema
+        if self.schema is None:
+            errors.append("No JSON schema provided for validation.")
+            return ValidationResult(is_valid=False, errors=errors, warnings=warnings)
         try:
             jsonschema.validate(instance=data, schema=self.schema)
         except jsonschema.ValidationError as e:

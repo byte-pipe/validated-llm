@@ -124,6 +124,35 @@ class CustomTask(BaseTask):
         return {"processed": response}
 ```
 
+## CLI Tools
+
+### Prompt to Task Converter
+
+Convert existing prompts into validated task classes:
+
+```bash
+# Install the package
+pip install validated-llm
+
+# Convert a prompt file to a task
+validated-llm-prompt2task prompt.txt
+
+# Specify output location
+validated-llm-prompt2task prompt.txt --output tasks/my_task.py
+
+# Interactive mode with validator selection
+validated-llm-prompt2task prompt.txt --interactive
+
+# Analyze prompt without generating code
+validated-llm-prompt2task prompt.txt --analyze-only
+```
+
+The tool will:
+- Detect output format (JSON, CSV, text, lists)
+- Suggest appropriate validators
+- Generate a complete task class with validation
+- Include the original prompt as documentation
+
 ## Configuration
 
 ### LLM Provider Setup
