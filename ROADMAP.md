@@ -116,14 +116,14 @@ Transform validated-llm from a data validation framework into a comprehensive LL
    - **DateTimeValidator** - Flexible date/time parsing with multiple formats
    - **EmailValidator** - RFC-compliant email validation with domain filtering
    - **MarkdownValidator** - Markdown syntax and structure validation
+   - **PhoneNumberValidator** - International phone number validation with country support
+   - **SQLValidator** - SQL syntax validation with injection detection
+   - **RegexValidator** - Custom regex pattern validation with multiple modes
+   - **RangeValidator** - Numeric and date range validation with unit conversion
 
 ### 🎯 Next Up: Remaining Validators & Tool Improvements
 
 #### 1. Complete Validator Suite
-- **SQLValidator**: Basic SQL syntax validation
-- **RegexValidator**: Validate against custom regex patterns
-- **RangeValidator**: Numeric/date ranges with min/max
-- **PhoneValidator**: International phone number formats
 - **JSONSchemaValidator**: Enhanced JSON validation with JSON Schema support
 - **XMLValidator**: XML syntax and schema validation
 - **YAMLValidator**: YAML syntax validation

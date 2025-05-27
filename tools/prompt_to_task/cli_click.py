@@ -14,6 +14,7 @@ import click
 
 from .analyzer import PromptAnalyzer
 from .code_generator import TaskCodeGenerator
+from .template_library import PromptTemplate, TemplateLibrary
 from .validator_suggester import ValidatorSuggester
 
 
@@ -59,6 +60,15 @@ def interactive_mode(analysis: Any, suggestions: list[Any], prompt_template: str
         for hint in analysis.validation_hints[:3]:
             click.echo(f"   • {hint[:80]}...")
 
+    # Show matched templates if any
+    if analysis.matched_templates:
+        click.echo(f"\n📚 MATCHED TEMPLATES")
+        click.echo("=" * 50)
+        for template, score in analysis.matched_templates[:3]:
+            click.echo(f"• {template.name} ({score:.1%} match)")
+            click.echo(f"  {template.description}")
+            click.echo()
+
     click.echo(f"\n🤖 VALIDATOR SUGGESTIONS")
     click.echo("=" * 50)
 
@@ -101,6 +111,8 @@ def interactive_mode(analysis: Any, suggestions: list[Any], prompt_template: str
 @click.option("--interactive", "-i", is_flag=True, help="Run in interactive mode to refine suggestions")
 @click.option("--analyze-only", is_flag=True, help="Only analyze the prompt, don't generate code")
 @click.option("--validator-only", help="Generate only validator code for specific suggestion (by index)")
+@click.option("--use-template", help="Use a specific template by name")
+@click.option("--show-templates", is_flag=True, help="Show matching templates and exit")
 def main(
     input_file: str,
     output: str,
@@ -109,6 +121,8 @@ def main(
     interactive: bool,
     analyze_only: bool,
     validator_only: str,
+    use_template: str,
+    show_templates: bool,
 ) -> None:
     """Convert prompts to validated-llm tasks.
 
@@ -149,9 +163,40 @@ def main(
     click.echo(f"📏 Prompt length: {len(prompt_template)} characters")
 
     # Initialize components
-    analyzer = PromptAnalyzer()
+    template_library = TemplateLibrary()
+    analyzer = PromptAnalyzer(template_library=template_library)
     suggester = ValidatorSuggester()
     generator = TaskCodeGenerator()
+
+    # Handle show-templates mode
+    if show_templates:
+        matches = template_library.find_similar_templates(prompt_template, top_k=5)
+        if matches:
+            click.echo("\n📚 MATCHING TEMPLATES")
+            click.echo("=" * 50)
+            for i, (template, score) in enumerate(matches, 1):
+                click.echo(f"\n{i}. {template.name} (similarity: {score:.1%})")
+                click.echo(f"   📁 Category: {template.category}")
+                click.echo(f"   📖 {template.description}")
+                if template.tags:
+                    click.echo(f"   🏷️  {', '.join(template.tags)}")
+        else:
+            click.echo("No matching templates found.")
+        return
+
+    # Handle use-template mode
+    if use_template:
+        selected_template = template_library.get_template(use_template)
+        if not selected_template:
+            click.echo(f"❌ Template '{use_template}' not found", err=True)
+            raise click.Abort()
+
+        # Update usage count
+        template_library.update_usage_count(use_template)
+
+        # Use template's prompt as base
+        prompt_template = selected_template.prompt_template
+        click.echo(f"📚 Using template: {selected_template.name}")
 
     # Analyze prompt
     analysis = analyzer.analyze(prompt_template)

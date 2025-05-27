@@ -11,7 +11,9 @@ This module analyzes prompt text to identify:
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from .template_library import PromptTemplate, TemplateLibrary
 
 
 @dataclass
@@ -42,11 +44,16 @@ class AnalysisResult:
     # Raw patterns found
     patterns: Optional[Dict[str, Any]] = None
 
+    # Matched templates from library
+    matched_templates: Optional[List[Tuple[PromptTemplate, float]]] = None
+
     def __post_init__(self) -> None:
         if self.validation_hints is None:
             self.validation_hints = []
         if self.patterns is None:
             self.patterns = {}
+        if self.matched_templates is None:
+            self.matched_templates = []
 
 
 class PromptAnalyzer:
@@ -59,8 +66,13 @@ class PromptAnalyzer:
     - What template variables are used
     """
 
-    def __init__(self) -> None:
-        """Initialize the prompt analyzer."""
+    def __init__(self, template_library: Optional[TemplateLibrary] = None) -> None:
+        """Initialize the prompt analyzer.
+
+        Args:
+            template_library: Optional template library to use for matching
+        """
+        self.template_library = template_library or TemplateLibrary()
         self.json_indicators = [
             r'\{[^{}]*"[^"]*"[^{}]*\}',  # JSON object pattern
             r"\[[^[\]]*\{[^}]*\}[^[\]]*\]",  # JSON array pattern
@@ -133,6 +145,13 @@ class PromptAnalyzer:
         # Extract validation hints
         validation_hints = self._extract_validation_hints(prompt_text)
 
+        # Find similar templates
+        matched_templates = self.template_library.find_similar_templates(prompt_text, top_k=3)
+
+        # Enhance JSON schema detection with template library
+        if output_format == "json" and matched_templates:
+            json_schema = self._enhance_json_schema_with_templates(json_schema, matched_templates)
+
         # Calculate overall confidence
         confidence = self._calculate_confidence(prompt_text, output_format, format_confidence, json_schema, csv_columns, list_pattern)
 
@@ -145,6 +164,7 @@ class PromptAnalyzer:
             validation_hints=validation_hints,
             confidence=confidence,
             patterns={"format_confidence": format_confidence, "has_examples": self._has_examples(prompt_text), "has_constraints": len(validation_hints) > 0},
+            matched_templates=matched_templates,
         )
 
     def _extract_template_variables(self, prompt_text: str) -> List[str]:
@@ -346,3 +366,36 @@ class PromptAnalyzer:
 
         # Ensure confidence stays within bounds
         return min(1.0, max(0.0, base_confidence))
+
+    def _enhance_json_schema_with_templates(self, detected_schema: Optional[Dict[str, Any]], matched_templates: List[Tuple[PromptTemplate, float]]) -> Optional[Dict[str, Any]]:
+        """Enhance detected JSON schema using matched templates."""
+        if not matched_templates:
+            return detected_schema
+
+        # Find the best matching JSON template
+        best_json_template = None
+        best_score = 0.0
+
+        for template, score in matched_templates:
+            if template.json_schema and template.category == "json" and score > best_score:
+                best_json_template = template
+                best_score = score
+
+        if best_json_template and best_score > 0.5:  # Use template if similarity is high enough
+            template_schema = best_json_template.json_schema
+            if template_schema is None:
+                return detected_schema
+
+            if detected_schema:
+                # Merge detected schema with template schema
+                merged_schema = template_schema.copy()
+                if "properties" in detected_schema:
+                    merged_schema.setdefault("properties", {}).update(detected_schema["properties"])
+                if "required" in detected_schema:
+                    merged_schema["required"] = list(set(merged_schema.get("required", []) + detected_schema["required"]))
+                return merged_schema
+            else:
+                # Use template schema directly
+                return template_schema
+
+        return detected_schema
