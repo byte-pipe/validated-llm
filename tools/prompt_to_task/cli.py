@@ -8,6 +8,7 @@ from typing import Optional
 
 import click
 
+from .cli_batch import batch as batch_command
 from .cli_click import main as convert_command
 from .cli_template import template as template_group
 
@@ -23,6 +24,9 @@ cli.add_command(convert_command, name="convert")
 
 # Add template management commands
 cli.add_command(template_group, name="template")
+
+# Add batch conversion command
+cli.add_command(batch_command, name="batch")
 
 
 # Add a default command that runs convert

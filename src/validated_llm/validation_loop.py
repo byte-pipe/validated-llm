@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from chatbot.chatbot import ChatBot
 
 from .base_validator import BaseValidator, FunctionValidator, ValidationResult
+from .config import ValidatedLLMConfig, get_config
 
 logger = logging.getLogger(__name__)
 
@@ -29,17 +30,23 @@ class ValidationLoop:
 
     def __init__(
         self,
-        model_name: str = "gemma3:27b",
-        default_max_retries: int = 3,
+        model_name: Optional[str] = None,
+        default_max_retries: Optional[int] = None,
+        config: Optional[ValidatedLLMConfig] = None,
     ):
         """
         Initialize the validation loop.
         Args:
-            model_name: Name of the Ollama model to use (e.g., "gemma3:27b")
-            default_max_retries: Default maximum number of retry attempts
+            model_name: Name of the Ollama model to use (defaults to config value)
+            default_max_retries: Default maximum number of retry attempts (defaults to config value)
+            config: Configuration object (defaults to loading from config files)
         """
-        self.model_name = model_name
-        self.default_max_retries = default_max_retries
+        # Load config if not provided
+        self.config = config or get_config()
+
+        # Use provided values or fall back to config
+        self.model_name = model_name or self.config.llm_model
+        self.default_max_retries = default_max_retries or self.config.max_retries
         self.validator_registry: Dict[str, BaseValidator] = {}
 
     def register_validator(self, name: str, validator: Union[BaseValidator, Callable]) -> None:
@@ -103,7 +110,16 @@ class ValidationLoop:
         logger.info(f"Starting LLM validation loop with validator: {validator.name}")
         # Create ChatBot instance with comprehensive system prompt
         system_prompt = self._build_system_prompt(prompt_template, validator, input_data)
-        chatbot = ChatBot(prompt=system_prompt, model=self.model_name)
+        # Use config values for ChatBot initialization
+        chatbot_kwargs = {
+            "prompt": system_prompt,
+            "model": self.model_name,
+            "temperature": self.config.llm_temperature,
+        }
+        if self.config.llm_max_tokens:
+            chatbot_kwargs["max_tokens"] = self.config.llm_max_tokens
+
+        chatbot = ChatBot(**chatbot_kwargs)
         # Initialize validation_result for proper scoping
         validation_result: Optional[ValidationResult] = None
         cleaned_output = ""
@@ -113,7 +129,7 @@ class ValidationLoop:
                 # For first attempt, ask for the initial task
                 if attempt == 0:
                     task_prompt = prompt_template.format(**input_data)
-                    llm_response = chatbot.ask(task_prompt)
+                    llm_response = chatbot.chat(task_prompt)
                 else:
                     # For subsequent attempts, provide feedback
                     if validation_result is not None:
@@ -123,7 +139,7 @@ class ValidationLoop:
 Please provide a corrected response that addresses these issues."""
                     else:
                         retry_prompt = "Please provide a corrected response."
-                    llm_response = chatbot.ask(retry_prompt)
+                    llm_response = chatbot.chat(retry_prompt)
                 if debug and debug_info is not None:
                     debug_info.append(
                         {

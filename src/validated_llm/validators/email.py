@@ -6,6 +6,7 @@ import re
 from typing import Any, Dict, List, Optional, Set
 
 from validated_llm.base_validator import BaseValidator, ValidationResult
+from validated_llm.config import get_validator_config
 
 
 class EmailValidator(BaseValidator):
@@ -30,8 +31,8 @@ class EmailValidator(BaseValidator):
         allowed_domains: Optional[List[str]] = None,
         blocked_domains: Optional[List[str]] = None,
         case_sensitive_local: bool = True,
-        allow_smtputf8: bool = True,
-        check_deliverability: bool = False,
+        allow_smtputf8: Optional[bool] = None,
+        check_deliverability: Optional[bool] = None,
         suggest_corrections: bool = True,
     ):
         """
@@ -51,6 +52,16 @@ class EmailValidator(BaseValidator):
             suggest_corrections: Whether to suggest corrections for common typos
         """
         super().__init__(name, description)
+
+        # Load config defaults
+        config = get_validator_config("EmailValidator")
+
+        # Apply config defaults if not explicitly set
+        if allow_smtputf8 is None:
+            allow_smtputf8 = config.get("allow_smtputf8", True)
+        if check_deliverability is None:
+            check_deliverability = config.get("check_deliverability", False)
+
         self.extract_all = extract_all
         self.min_emails = min_emails
         self.max_emails = max_emails

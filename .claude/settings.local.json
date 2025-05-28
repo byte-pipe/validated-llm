@@ -72,7 +72,8 @@
       "Bash(poetry run python:*)",
       "Bash(poetry run pre-commit run mypy:*)",
       "Bash(pre-commit run:*)",
-      "Bash(timeout 60s poetry run python examples/simple_story_test.py)"
+      "Bash(timeout 60s poetry run python examples/simple_story_test.py)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

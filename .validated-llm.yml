@@ -1,0 +1,67 @@
+# Validated-LLM Configuration File
+# Project-specific defaults for the validated-llm framework
+
+# LLM Settings
+llm_model: gemma3:27b
+llm_temperature: 0.7
+# llm_max_tokens: 2000  # Optional token limit
+
+# Validation Settings
+max_retries: 3
+timeout_seconds: 60
+show_progress: true
+
+# Code Generation Defaults
+code_language: python
+code_style_formatter: black
+require_code_examples: true
+require_tests: true
+
+# Documentation Defaults
+doc_min_sections: 3
+doc_min_words_per_section: 50
+doc_check_links: true
+doc_check_spelling: false
+
+# Output Settings
+output_format: markdown
+verbose: false
+
+# Validator-specific defaults
+validator_defaults:
+  EmailValidator:
+    allow_smtputf8: true
+    check_deliverability: false
+
+  JSONSchemaValidator:
+    strict_mode: true
+    validate_schema: true
+
+  CodeValidator:
+    language: python
+    strict_mode: true
+
+  DocumentationValidator:
+    min_sections: 5
+    require_code_examples: true
+
+# Task-specific defaults
+task_defaults:
+  CodeGenerationTask:
+    language: python
+    include_type_hints: true
+    include_docstrings: true
+
+  DocumentationTask:
+    doc_type: readme
+    include_examples: true
+    include_installation: true
+
+# Plugin Settings (future feature)
+# plugin_paths:
+#   - ./my_validators
+#   - ~/.validated-llm/plugins
+#
+# enabled_plugins:
+#   - custom_validator
+#   - domain_specific_tasks

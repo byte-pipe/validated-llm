@@ -24,6 +24,7 @@ classifiers = [
 
 [tool.poetry.scripts]
 validated-llm-prompt2task = "tools.prompt_to_task.cli_click:main"
+validated-llm-config = "validated_llm.cli_config:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -44,6 +45,9 @@ flake8 = "^6.0.0"
 pre-commit = "^3.0.0"
 types-jsonschema = "*"
 types-PyYAML = "*"
+lxml-stubs = "^0.5.1"
+types-lxml = "^2025.3.30"
+dnspython = "^2.7.0"
 
 [build-system]
 requires = ["poetry-core"]
