@@ -62,7 +62,7 @@ class TestLLMValidationIntegration:
     @pytest.fixture(scope="class")
     def validation_loop(self) -> ValidationLoop:
         """Create validation loop for testing with ChatBot."""
-        return ValidationLoop(model_name=DEFAULT_MODEL, default_max_retries=MAX_ATTEMPTS)
+        return ValidationLoop(vendor="ollama", model=DEFAULT_MODEL, default_max_retries=MAX_ATTEMPTS)
 
     @staticmethod
     def get_test_cases() -> List[LLMValidationTestCase]:

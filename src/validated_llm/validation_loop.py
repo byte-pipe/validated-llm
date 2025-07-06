@@ -30,14 +30,16 @@ class ValidationLoop:
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        vendor: Optional[str] = None,
+        model: Optional[str] = None,
         default_max_retries: Optional[int] = None,
         config: Optional[ValidatedLLMConfig] = None,
     ):
         """
         Initialize the validation loop.
         Args:
-            model_name: Name of the Ollama model to use (defaults to config value)
+            vendor: Name of the LLM vendor (e.g., 'ollama', 'openai', 'anthropic') (defaults to config value)
+            model: Name of the model to use (defaults to config value)
             default_max_retries: Default maximum number of retry attempts (defaults to config value)
             config: Configuration object (defaults to loading from config files)
         """
@@ -45,7 +47,8 @@ class ValidationLoop:
         self.config = config or get_config()
 
         # Use provided values or fall back to config
-        self.model_name = model_name or self.config.llm_model
+        self.vendor = vendor or self.config.llm_vendor
+        self.model = model or self.config.llm_model
         self.default_max_retries = default_max_retries or self.config.max_retries
         self.validator_registry: Dict[str, BaseValidator] = {}
 
@@ -113,7 +116,8 @@ class ValidationLoop:
         # Use config values for ChatBot initialization
         chatbot_kwargs = {
             "prompt": system_prompt,
-            "model": self.model_name,
+            "vendor": self.vendor,
+            "model": self.model,
             "temperature": self.config.llm_temperature,
         }
         if self.config.llm_max_tokens:
@@ -215,7 +219,8 @@ When I ask you to correct previous errors, please analyze the feedback carefully
             "success": result["success"],
             "attempts": result["attempts"],
             "execution_time": result["execution_time"],
-            "model_name": self.model_name,
+            "vendor": self.vendor,
+            "model": self.model,
         }
         if "debug_info" in result:
             log_data["debug_info"] = result["debug_info"]

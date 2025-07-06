@@ -148,7 +148,7 @@ files = [
 
 [[package]]
 name = "chatbot"
-version = "0.1.54"
+version = "0.1.57"
 description = ""
 optional = false
 python-versions = "^3.11"

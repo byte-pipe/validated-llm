@@ -31,7 +31,8 @@ class AsyncValidationLoop:
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
+        vendor: Optional[str] = None,
+        model: Optional[str] = None,
         default_max_retries: Optional[int] = None,
         config: Optional[ValidatedLLMConfig] = None,
         max_concurrent_validations: int = 10,
@@ -40,7 +41,8 @@ class AsyncValidationLoop:
         Initialize the async validation loop.
 
         Args:
-            model_name: Name of the Ollama model to use (defaults to config value)
+            vendor: Name of the LLM vendor (e.g., 'ollama', 'openai', 'anthropic') (defaults to config value)
+            model: Name of the model to use (defaults to config value)
             default_max_retries: Default maximum number of retry attempts (defaults to config value)
             config: Configuration object (defaults to loading from config files)
             max_concurrent_validations: Maximum number of concurrent validation operations
@@ -49,7 +51,8 @@ class AsyncValidationLoop:
         self.config = config or get_config()
 
         # Use provided values or fall back to config
-        self.model_name = model_name or self.config.llm_model
+        self.vendor = vendor or self.config.llm_vendor
+        self.model = model or self.config.llm_model
         self.default_max_retries = default_max_retries or self.config.max_retries
         self.max_concurrent_validations = max_concurrent_validations
 
@@ -133,7 +136,8 @@ class AsyncValidationLoop:
         # Use config values for ChatBot initialization
         chatbot_kwargs = {
             "prompt": system_prompt,
-            "model": self.model_name,
+            "vendor": self.vendor,
+            "model": self.model,
             "temperature": self.config.llm_temperature,
         }
         if self.config.llm_max_tokens:
@@ -298,13 +302,13 @@ Please provide a corrected response that addresses these issues."""
 
     async def _chat_async(self, chatbot: ChatBot, message: str) -> str:
         """
-        Async wrapper for ChatBot.chat().
+        Async wrapper for ChatBot.ask().
 
-        Note: Currently ChatBot.chat() is synchronous, so we run it in a thread pool.
+        Note: Currently ChatBot.ask() is synchronous, so we run it in a thread pool.
         If ChatBot adds native async support, this can be updated.
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, chatbot.chat, message)
+        return await loop.run_in_executor(None, chatbot.ask, message)
 
     def _build_system_prompt(self, prompt_template: str, validator: AsyncBaseValidator, input_data: Dict[str, Any]) -> str:
         """Build comprehensive system prompt for ChatBot initialization."""
@@ -334,7 +338,8 @@ When I ask you to correct previous errors, please analyze the feedback carefully
             "success": result["success"],
             "attempts": result["attempts"],
             "execution_time": result["execution_time"],
-            "model_name": self.model_name,
+            "vendor": self.vendor,
+            "model": self.model,
             "async_execution": True,
         }
 

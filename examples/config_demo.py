@@ -26,6 +26,7 @@ def demo_config_loading():
     config = load_config()
 
     print(f"Current configuration:")
+    print(f"  LLM Vendor: {config.llm_vendor}")
     print(f"  LLM Model: {config.llm_model}")
     print(f"  Temperature: {config.llm_temperature}")
     print(f"  Max Retries: {config.max_retries}")
@@ -77,21 +78,28 @@ def demo_env_override():
     print("=== Environment Variable Override Demo ===\n")
 
     # Save original env
+    original_vendor = os.environ.get("VALIDATED_LLM_VENDOR")
     original_model = os.environ.get("VALIDATED_LLM_MODEL")
 
     try:
-        # Set environment variable
+        # Set environment variables
+        os.environ["VALIDATED_LLM_VENDOR"] = "openai"
         os.environ["VALIDATED_LLM_MODEL"] = "gpt-4"
 
         # Reload config
         config = load_config()
 
-        print(f"After setting VALIDATED_LLM_MODEL=gpt-4:")
+        print(f"After setting VALIDATED_LLM_VENDOR=openai and VALIDATED_LLM_MODEL=gpt-4:")
+        print(f"  LLM Vendor: {config.llm_vendor} (overridden by env var)")
         print(f"  LLM Model: {config.llm_model} (overridden by env var)")
         print()
 
     finally:
         # Restore original env
+        if original_vendor is None:
+            os.environ.pop("VALIDATED_LLM_VENDOR", None)
+        else:
+            os.environ["VALIDATED_LLM_VENDOR"] = original_vendor
         if original_model is None:
             os.environ.pop("VALIDATED_LLM_MODEL", None)
         else:
@@ -102,13 +110,21 @@ def demo_validation_loop_with_config():
     """Demonstrate ValidationLoop using configuration."""
     print("=== ValidationLoop Using Config ===\n")
 
-    # Create ValidationLoop without specifying model_name or max_retries
+    # Create ValidationLoop without specifying vendor, model or max_retries
     # It will use values from config
     loop = ValidationLoop()
 
     print(f"ValidationLoop settings:")
-    print(f"  model_name: {loop.model_name} (from config)")
+    print(f"  vendor: {loop.vendor} (from config)")
+    print(f"  model: {loop.model} (from config)")
     print(f"  default_max_retries: {loop.default_max_retries} (from config)")
+    print()
+
+    # Also demonstrate creating with explicit vendor
+    print("Creating ValidationLoop with explicit vendor:")
+    loop2 = ValidationLoop(vendor="anthropic", model="claude-3-opus")
+    print(f"  vendor: {loop2.vendor}")
+    print(f"  model: {loop2.model}")
     print()
 
 
@@ -125,6 +141,7 @@ def demo_custom_config_file():
             f.write(
                 """
 # Custom configuration for demo
+llm_vendor: custom-vendor
 llm_model: custom-model
 llm_temperature: 0.5
 max_retries: 5
@@ -140,6 +157,7 @@ validator_defaults:
         config = load_config(tmpdir)
 
         print(f"Custom config loaded from {config_path}:")
+        print(f"  LLM Vendor: {config.llm_vendor}")
         print(f"  LLM Model: {config.llm_model}")
         print(f"  Temperature: {config.llm_temperature}")
         print(f"  Max Retries: {config.max_retries}")

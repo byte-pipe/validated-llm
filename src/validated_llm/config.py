@@ -20,6 +20,7 @@ class ValidatedLLMConfig:
     """Configuration for validated-llm framework."""
 
     # LLM settings
+    llm_vendor: str = "ollama"  # Default vendor
     llm_model: str = "gemma3:27b"
     llm_temperature: float = 0.7
     llm_max_tokens: Optional[int] = None
@@ -103,6 +104,7 @@ class ConfigLoader:
     def _get_env_cache_key(self) -> str:
         """Get cache key based on environment variables."""
         env_keys = [
+            "VALIDATED_LLM_VENDOR",
             "VALIDATED_LLM_MODEL",
             "VALIDATED_LLM_TEMPERATURE",
             "VALIDATED_LLM_MAX_TOKENS",
@@ -216,6 +218,7 @@ class ConfigLoader:
 
         # Direct field mappings
         direct_fields: Dict[str, Union[Type[Any], Tuple[Type[Any], ...]]] = {
+            "llm_vendor": str,
             "llm_model": str,
             "llm_temperature": float,
             "llm_max_tokens": (int, type(None)),
@@ -277,6 +280,7 @@ class ConfigLoader:
 
         # Check for environment variable overrides
         env_mappings: Dict[str, tuple[str, Callable[[str], Any]]] = {
+            "VALIDATED_LLM_VENDOR": ("llm_vendor", str),
             "VALIDATED_LLM_MODEL": ("llm_model", str),
             "VALIDATED_LLM_TEMPERATURE": ("llm_temperature", float),
             "VALIDATED_LLM_MAX_TOKENS": ("llm_max_tokens", int),
@@ -345,6 +349,7 @@ def create_sample_config() -> str:
 # Place this file as .validated-llm.yml in your project root
 
 # LLM Settings
+llm_vendor: ollama  # Vendor: 'ollama', 'openai', 'anthropic', etc.
 llm_model: gemma3:27b
 llm_temperature: 0.7
 # llm_max_tokens: 2000  # Optional token limit

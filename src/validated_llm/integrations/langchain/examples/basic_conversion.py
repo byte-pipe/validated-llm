@@ -50,9 +50,8 @@ def demo_langchain_conversion() -> None:
 
     # 3. Use the task with validation
     loop = ValidationLoop(
-        task=ProductMarketingTask(),
-        llm_backend="ollama",
-        model_name="llama2"
+        vendor="ollama",
+        model="llama2"
     )
 
     result = loop.execute(
