@@ -11,7 +11,7 @@ This module analyzes prompt text to identify:
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from .template_library import PromptTemplate, TemplateLibrary
 
@@ -226,56 +226,201 @@ class PromptAnalyzer:
         """
         Extract JSON schema from prompt examples or descriptions.
 
-        This is a simplified extraction that looks for JSON examples
-        and tries to infer schema structure.
+        Enhanced to detect nested objects and arrays.
         """
         # Look for JSON-like structures in the prompt
+        # Enhanced patterns to find nested structures
         json_patterns = [
+            r"\{[^{}]*\{[^{}]*\}[^{}]*\}",  # Nested objects
+            r"\[[^\[\]]*\{[^{}]*\}[^\[\]]*\]",  # Array of objects
             r'\{[^{}]*"[^"]*":[^{}]*\}',  # Simple JSON objects
             r"\{[^{}]*\}",  # Any curly braces content
         ]
 
         schema: dict[str, Any] = {"type": "object", "properties": {}}
-        found_properties = set()
+        found_properties: dict[str, Any] = {}  # Changed to dict to store type info
 
-        # Extract property names from JSON examples
-        for pattern in json_patterns:
-            matches = re.findall(pattern, prompt_text)
-            for match in matches:
-                # Try to parse as JSON to extract keys
-                try:
-                    parsed = json.loads(match)
-                    if isinstance(parsed, dict):
-                        for key in parsed.keys():
-                            found_properties.add(key)
-                except:
-                    # If parsing fails, look for quoted strings that might be keys
-                    key_pattern = r'"([^"]+)":'
-                    keys = re.findall(key_pattern, match)
-                    found_properties.update(keys)
+        # Try to find and parse complete JSON examples
+        # Look for code blocks first
+        code_block_pattern = r"```(?:json)?\s*\n?([\s\S]*?)\n?```"
+        code_blocks = re.findall(code_block_pattern, prompt_text)
+
+        for block in code_blocks:
+            try:
+                parsed = json.loads(block.strip())
+                if isinstance(parsed, dict):
+                    self._extract_schema_from_json(parsed, found_properties)
+                elif isinstance(parsed, list) and parsed:
+                    # Handle array of objects
+                    schema["type"] = "array"
+                    schema["items"] = {"type": "object", "properties": {}}
+                    if isinstance(parsed[0], dict):
+                        self._extract_schema_from_json(parsed[0], schema["items"]["properties"])
+                    return schema
+            except:
+                pass
+
+        # If no code blocks, try other patterns
+        # First try to find complete JSON blocks
+        json_block_pattern = r"\{[^{}]*(?:\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}[^{}]*)*\}"
+        large_matches = re.findall(json_block_pattern, prompt_text, re.DOTALL)
+
+        for match in large_matches:
+            try:
+                parsed = json.loads(match.strip())
+                if isinstance(parsed, dict):
+                    self._extract_schema_from_json(parsed, found_properties)
+            except:
+                # If full parsing fails, try smaller patterns
+                for pattern in json_patterns:
+                    inner_matches = re.findall(pattern, match, re.DOTALL)
+                    for inner_match in inner_matches:
+                        try:
+                            # Clean up the match to make it valid JSON
+                            cleaned = inner_match.strip()
+                            if not cleaned.startswith("{") and "{" in cleaned:
+                                cleaned = cleaned[cleaned.index("{") :]
+                            if not cleaned.endswith("}") and "}" in cleaned:
+                                cleaned = cleaned[: cleaned.rindex("}") + 1]
+
+                            parsed = json.loads(cleaned)
+                            if isinstance(parsed, dict):
+                                self._extract_schema_from_json(parsed, found_properties)
+                        except:
+                            # If parsing fails, look for quoted strings that might be keys
+                            key_pattern = r'"([^"]+)":\s*(?:"[^"]*"|[0-9.]+|true|false|null|\{[^}]*\}|\[[^\]]*\])'
+                            key_matches = re.findall(key_pattern, inner_match)
+                            for key in key_matches:
+                                if key not in found_properties:
+                                    found_properties[key] = {"type": "string"}
 
         # Look for key descriptions in text
-        key_patterns = [
-            r'"([^"]+)":\s*([^,}\]]+)',  # "key": description
-            r"([a-zA-Z_][a-zA-Z0-9_]*)\s*\([^)]*\)",  # key(type)
-            r"([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*([^\n,]+)",  # key: description
-        ]
+        # First, find root-level properties only (not indented)
+        root_prop_pattern = r"^-\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]+)\)[^:]*:\s*(.*)$"
+        lines = prompt_text.split("\n")
+        # Detect the base indentation level
+        base_indent = 0
+        for line in lines:
+            if line.strip():  # First non-empty line
+                base_indent = len(line) - len(line.lstrip())
+                break
 
-        for pattern in key_patterns:
-            matches = re.findall(pattern, prompt_text)
-            for match in matches:
-                if len(match) >= 2:
-                    key, description = match[0], match[1]
-                    found_properties.add(key)
+        for i, line in enumerate(lines):
+            if line.strip():
+                # Calculate relative indentation
+                current_indent = len(line) - len(line.lstrip())
+                relative_indent = current_indent - base_indent
 
-        # Build basic schema
+                if relative_indent == 0:  # Root level item
+                    match = re.match(root_prop_pattern, line.strip())
+                    if match:
+                        key = match.group(1)
+                        type_hint = match.group(2).lower()
+
+                        # Skip words that aren't property names
+                        if key.lower() in ["create", "generate", "following", "fields", "containing"]:
+                            continue
+
+                        if key not in found_properties:  # Don't overwrite existing entries
+                            if "array of object" in type_hint:
+                                found_properties[key] = {"type": "array", "items": {"type": "object", "properties": {}}}
+                            elif "array" in type_hint or "list" in type_hint:
+                                found_properties[key] = {"type": "array", "items": {"type": "string"}}
+                            elif "object" in type_hint:
+                                found_properties[key] = {"type": "object", "properties": {}}
+                            elif "number" in type_hint or "int" in type_hint:
+                                found_properties[key] = {"type": "number"}
+                            elif "bool" in type_hint:
+                                found_properties[key] = {"type": "boolean"}
+                            elif "string" in type_hint:
+                                found_properties[key] = {"type": "string"}
+                            else:
+                                found_properties[key] = {"type": "string"}
+
+        # Process nested properties by looking at indentation
+        # Second pass: find nested properties under objects
+        current_object = None
+
+        for i, line in enumerate(lines):
+            if line.strip():
+                current_indent = len(line) - len(line.lstrip())
+                relative_indent = current_indent - base_indent
+
+                # Check if this is an object declaration
+                if relative_indent == 0:
+                    object_match = re.match(r"^-\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(object\)", line.strip())
+                    if object_match:
+                        current_object = object_match.group(1)
+
+                # Check if this is a nested property
+                elif relative_indent > 0 and current_object and current_object in found_properties:
+                    nested_match = re.match(r"^-\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]+)\)", line.strip())
+                    if nested_match:
+                        prop_name = nested_match.group(1)
+                        prop_type = nested_match.group(2).lower()
+
+                        if "properties" not in found_properties[current_object]:
+                            found_properties[current_object]["properties"] = {}
+
+                        if "array of object" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "array", "items": {"type": "object", "properties": {}}}
+                        elif "array" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "array", "items": {"type": "string"}}
+                        elif "object" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "object", "properties": {}}
+                        elif "number" in prop_type or "int" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "number"}
+                        elif "bool" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "boolean"}
+                        elif "string" in prop_type:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "string"}
+                        else:
+                            found_properties[current_object]["properties"][prop_name] = {"type": "string"}
+
+        # Build schema from found properties
         if found_properties:
-            for prop in found_properties:
-                schema["properties"][prop] = {"type": "string"}  # Default to string
-            schema["required"] = list(found_properties)
+            schema["properties"] = found_properties
+            schema["required"] = list(found_properties.keys())
             return schema
 
+        # If we detect JSON format but no properties, return minimal schema
         return None
+
+    def _extract_schema_from_json(self, json_obj: Union[Dict, List], schema_properties: Dict[str, Any]) -> None:
+        """
+        Recursively extract schema from a JSON object.
+
+        Args:
+            json_obj: The JSON object to analyze
+            schema_properties: Dictionary to populate with schema properties
+        """
+        if isinstance(json_obj, dict):
+            for key, value in json_obj.items():
+                if isinstance(value, dict):
+                    schema_properties[key] = {"type": "object", "properties": {}}
+                    self._extract_schema_from_json(value, schema_properties[key]["properties"])
+                elif isinstance(value, list):
+                    schema_properties[key] = {"type": "array", "items": {}}
+                    if value:  # If list is not empty
+                        if isinstance(value[0], dict):
+                            schema_properties[key]["items"] = {"type": "object", "properties": {}}
+                            self._extract_schema_from_json(value[0], schema_properties[key]["items"]["properties"])
+                        elif isinstance(value[0], str):
+                            schema_properties[key]["items"] = {"type": "string"}
+                        elif isinstance(value[0], (int, float)):
+                            schema_properties[key]["items"] = {"type": "number"}
+                        elif isinstance(value[0], bool):
+                            schema_properties[key]["items"] = {"type": "boolean"}
+                    else:
+                        schema_properties[key]["items"] = {"type": "string"}  # Default
+                elif isinstance(value, str):
+                    schema_properties[key] = {"type": "string"}
+                elif isinstance(value, bool):
+                    schema_properties[key] = {"type": "boolean"}
+                elif isinstance(value, (int, float)):
+                    schema_properties[key] = {"type": "number"}
+                elif value is None:
+                    schema_properties[key] = {"type": "null"}
 
     def _extract_csv_columns(self, prompt_text: str) -> Optional[List[str]]:
         """Extract CSV column names from prompt."""

@@ -95,25 +95,69 @@ class ValidatorSuggester:
         config = {}
 
         if analysis.json_schema:
-            config["schema"] = analysis.json_schema
-            confidence = 0.9
+            schema = analysis.json_schema
+            config["schema"] = schema
+
+            # Check if schema has nested structures
+            has_nested = self._has_nested_structure(schema)
+
+            # Higher confidence for detected schemas, especially with nested structures
+            if has_nested:
+                confidence = 0.95
+                description = "Validates complex JSON with nested objects/arrays against detected schema"
+                # Use JSONSchemaValidator for complex schemas
+                validator_type = "JSONSchemaValidator"
+                import_path = "validated_llm.validators.json_schema"
+            else:
+                confidence = 0.9
+                description = "Validates JSON output against detected schema"
+                # Use simpler JSONValidator for flat structures
+                validator_type = "JSONValidator"
+                import_path = "validated_llm.tasks.json_generation"
         else:
             # Create basic schema from template variables
             if analysis.template_variables or []:
-                schema: dict[str, Any] = {"type": "object", "properties": {}, "required": analysis.template_variables or []}
+                basic_schema: dict[str, Any] = {"type": "object", "properties": {}, "required": analysis.template_variables or []}
                 for var in analysis.template_variables or []:
-                    schema["properties"][var] = {"type": "string"}
-                config["schema"] = schema
+                    basic_schema["properties"][var] = {"type": "string"}
+                config["schema"] = basic_schema
                 confidence = 0.7
+                description = "Validates JSON output with basic schema from template variables"
+                validator_type = "JSONValidator"
+                import_path = "validated_llm.tasks.json_generation"
             else:
                 confidence = 0.5
+                description = "Validates basic JSON format"
+                validator_type = "JSONValidator"
+                import_path = "validated_llm.tasks.json_generation"
 
         # Adjust confidence based on analysis confidence
         confidence = min(confidence, analysis.confidence + 0.1)
 
-        return ValidatorSuggestion(
-            validator_type="JSONValidator", import_path="validated_llm.tasks.json_generation", config=config, confidence=confidence, description="Validates JSON output against detected schema", is_builtin=True
-        )
+        return ValidatorSuggestion(validator_type=validator_type, import_path=import_path, config=config, confidence=confidence, description=description, is_builtin=True)
+
+    def _has_nested_structure(self, schema: Dict[str, Any]) -> bool:
+        """Check if a JSON schema has nested objects or arrays."""
+        # Check root level
+        if schema.get("type") == "array":
+            items = schema.get("items", {})
+            if items.get("type") == "object":
+                return True
+
+        # Check properties
+        properties = schema.get("properties", {})
+        for prop_name, prop_schema in properties.items():
+            if isinstance(prop_schema, dict):
+                prop_type = prop_schema.get("type")
+                if prop_type == "object":
+                    return True
+                elif prop_type == "array":
+                    # Array of objects is considered nested
+                    items = prop_schema.get("items", {})
+                    if isinstance(items, dict) and items.get("type") == "object":
+                        return True
+
+        return False
 
     def _suggest_csv_validator(self, analysis: AnalysisResult) -> ValidatorSuggestion:
         """Suggest CSV validator configuration."""

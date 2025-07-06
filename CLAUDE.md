@@ -9,18 +9,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Key Architecture Components
 
 ### ValidationLoop (`src/validated_llm/validation_loop.py`)
+
 - Main orchestrator handling retry logic and LLM communication
 - Uses ChatBot library (dependency from `/Users/a/data/projects/1-ai/chatbot`) instead of direct OpenAI calls
 - Builds comprehensive system prompts with validation instructions
 - Implements feedback loops where validation errors are sent back to LLM for correction
 
 ### BaseValidator (`src/validated_llm/base_validator.py`)
+
 - Abstract base for all validators with standardized ValidationResult
 - Includes source code introspection - validators can include their own code in LLM prompts
 - FunctionValidator wrapper allows using standalone functions as validators
 - ValidationResult provides structured error/warning feedback for LLM correction
 
 ### Task System (`src/validated_llm/tasks/`)
+
 - BaseTask abstract class pairs prompt templates with their validators
 - Built-in tasks: StoryToScenesTask, JSONGenerationTask (PersonJSONTask, ProductCatalogTask), CSVGenerationTask
 - Tasks encapsulate both the prompt template and corresponding validator class
@@ -28,54 +31,42 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Development Commands
 
 ```bash
-# Install dependencies
-poetry install
-
-# Run tests (integration tests require actual LLM access)
-poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=src tests/
-
-# Run specific integration test (may timeout if LLM unavailable)
-poetry run pytest tests/test_llm_validation_integration.py
-
-# Format code (line length 222 per pyproject.toml)
-poetry run black src/ tests/
+poetry install # Install dependencies
+poetry run pytest # Run tests (integration tests require actual LLM access)
+poetry run pytest --cov=src tests/ # Run with coverage
+poetry run pytest tests/test_llm_validation_integration.py # Run specific integration test (may timeout if LLM unavailable)
+poetry run black src/ tests/ # Format code (line length 222 per pyproject.toml)
 poetry run isort src/ tests/
-
-# Type checking
-poetry run mypy src/
-
-# Lint code
-poetry run flake8 src/ tests/
-
-# Build package
-poetry build
+poetry run mypy src/ # Type checking
+poetry run flake8 src/ tests/ # Lint code
+poetry build # Build package
 ```
 
 ## Core Data Flow
 
-1. Task defines prompt_template and validator_class
-2. ValidationLoop.execute() builds comprehensive system prompt including validator source code
-3. ChatBot initialized with system prompt including validation instructions
-4. LLM generates response, ValidationLoop extracts and validates output
-5. If validation fails, errors are sent back as feedback for retry
-6. Process repeats until success or max_retries exceeded
+- Task defines prompt_template and validator_class
+- ValidationLoop.execute() builds comprehensive system prompt including validator source code
+- ChatBot initialized with system prompt including validation instructions
+- LLM generates response, ValidationLoop extracts and validates output
+- If validation fails, errors are sent back as feedback for retry
+- Process repeats until success or max_retries exceeded
 
 ## Key Implementation Details
 
 ### LLM Integration
+
 - Uses ChatBot library instead of direct API calls
 - Default model: "gemma3:27b" (Ollama model)
 - ChatBot handles system prompts and conversational context for feedback loops
 
 ### Validation Architecture
+
 - Validators can include their source code in prompts using `get_source_code()`
 - ValidationResult provides structured feedback (`errors`, `warnings`, `metadata`)
 - FunctionValidator allows wrapping simple functions as full validators
 
 ### Task-Based Design
+
 - Tasks are complete workflows (prompt + validator) rather than separate components
 - Built-in tasks handle common patterns (JSON schema, CSV, story processing)
 - Tasks can customize prompt data preparation and validator configuration

@@ -54,11 +54,7 @@ class URLValidator(BaseValidator):
 
         # URL regex pattern - handles most common URL formats
         self.url_pattern = re.compile(
-            r"(?:(?:https?|ftp|ftps):\/\/)?"  # Optional scheme
-            r"(?:www\.)?"  # Optional www
-            r"(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}"  # Domain
-            r"(?::[0-9]+)?"  # Optional port
-            r'(?:\/[^"\s]*)?',  # Optional path
+            r"(?:(?:https?|ftp|ftps):\/\/)?" r"(?:www\.)?" r"(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}" r"(?::[0-9]+)?" r'(?:\/[^"\s]*)?',  # Optional scheme  # Optional www  # Domain  # Optional port  # Optional path
             re.IGNORECASE,
         )
 

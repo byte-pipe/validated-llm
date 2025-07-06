@@ -7,9 +7,11 @@ This integration allows users to convert their existing Langchain prompts and ch
 ## Key Components
 
 ### 1. PromptTemplate Converter
+
 Converts Langchain's `PromptTemplate` objects to validated-llm `BaseTask` subclasses.
 
 **Langchain PromptTemplate:**
+
 ```python
 from langchain.prompts import PromptTemplate
 
@@ -20,6 +22,7 @@ template = PromptTemplate(
 ```
 
 **Converted to validated-llm Task:**
+
 ```python
 from validated_llm.tasks import BaseTask
 from validated_llm.validators import MarkdownValidator
@@ -30,18 +33,21 @@ class ProductDescriptionTask(BaseTask):
 ```
 
 ### 2. Output Parser Mapping
+
 Maps Langchain output parsers to appropriate validated-llm validators:
 
-| Langchain Parser | Validated-LLM Validator |
-|-----------------|------------------------|
-| PydanticOutputParser | JSONValidator with schema |
-| StructuredOutputParser | JSONValidator |
-| ListOutputParser | Custom ListValidator |
-| DatetimeOutputParser | DateTimeValidator |
-| OutputFixingParser | Built into ValidationLoop |
+| Langchain Parser       | Validated-LLM Validator   |
+| ---------------------- | ------------------------- |
+| PydanticOutputParser   | JSONValidator with schema |
+| StructuredOutputParser | JSONValidator             |
+| ListOutputParser       | Custom ListValidator      |
+| DatetimeOutputParser   | DateTimeValidator         |
+| OutputFixingParser     | Built into ValidationLoop |
 
 ### 3. Chain Support
+
 Convert multi-step Langchain chains to validated task sequences:
+
 - Sequential chains → Task pipelines
 - Router chains → Conditional task execution
 - Memory/History → Context preservation between tasks
