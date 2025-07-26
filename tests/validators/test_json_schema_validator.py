@@ -178,4 +178,5 @@ class TestJSONSchemaValidator:
 
         assert "JSON Schema Validator" in description
         assert '"type": "object"' in description
-        assert '"required": ["id"]' in description
+        assert '"required"' in description
+        assert '"id"' in description

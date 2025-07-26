@@ -243,7 +243,7 @@ class TaskCodeGenerator:
             f"    validator = task.create_validator()",
         ]
 
-        if hasattr(suggestions[0], "config") and suggestions[0].config:
+        if suggestions and hasattr(suggestions[0], "config") and suggestions[0].config:
             lines[-1] += f"  # Configuration: {suggestions[0].config}"
 
         lines.extend(["", "    # Create validation loop", "    loop = ValidationLoop(default_max_retries=3)", "", "    # Prepare input data"])

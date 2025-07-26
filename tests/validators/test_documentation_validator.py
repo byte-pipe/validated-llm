@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.validated_llm.validators.documentation import DocumentationType, DocumentationValidator
+from validated_llm.validators.documentation import DocumentationType, DocumentationValidator
 
 
 class TestDocumentationValidator:

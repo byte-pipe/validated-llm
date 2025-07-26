@@ -209,8 +209,8 @@ class TestTaskCodeGenerator:
 
         # Should properly escape the prompt template
         assert "class TrickytaskTask(BaseTask)" in code or "class TrickyTaskTask(BaseTask)" in code
-        # Check that the prompt is properly handled (should use ''' quotes)
-        assert "prompt_template = '''" in code or 'prompt_template = """' in code
+        # Check that the prompt is properly handled (should use triple quotes in the return statement)
+        assert 'return """' in code or "return '''" in code
 
     def test_empty_suggestions_handling(self) -> None:
         generator = TaskCodeGenerator()

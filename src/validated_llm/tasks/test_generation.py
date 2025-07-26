@@ -6,7 +6,7 @@ from typing import Any, Dict, Type
 
 from validated_llm.base_validator import BaseValidator
 from validated_llm.tasks import BaseTask
-from validated_llm.validators.test import TestValidator
+from validated_llm.validators.test import UnitTestValidator
 
 
 class TestGenerationTask(BaseTask):
@@ -59,7 +59,7 @@ class TestGenerationTask(BaseTask):
         self.test_style = test_style
 
         # Create validator with matching requirements
-        self._validator = TestValidator(
+        self._validator = UnitTestValidator(
             language=language, min_test_functions=min_test_functions, require_edge_cases=require_edge_cases, require_error_tests=require_error_tests, require_setup_teardown=include_setup_teardown, check_documentation=True
         )
 
@@ -115,7 +115,7 @@ Generate only the test code, no additional explanation."""
     @property
     def validator_class(self) -> Type[BaseValidator]:
         """Get the validator class for test validation."""
-        return TestValidator
+        return UnitTestValidator
 
     def prepare_prompt_data(self, **kwargs: Any) -> Dict[str, Any]:
         """Prepare data for the prompt template."""

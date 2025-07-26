@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "validated-llm"
-version = "0.1.11"
+version = "0.1.12"
 description = "LLM output validation with retry loops - ensure your language model responses meet requirements"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
@@ -48,6 +48,7 @@ types-PyYAML = "*"
 lxml-stubs = "^0.5.1"
 types-lxml = "^2025.3.30"
 dnspython = "^2.7.0"
+pytest-timeout = "^2.4.0"
 
 [build-system]
 requires = ["poetry-core"]

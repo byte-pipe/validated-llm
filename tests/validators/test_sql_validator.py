@@ -258,6 +258,6 @@ class TestSQLValidator:
 
         instructions = validator.get_validation_instructions()
         assert "SQL QUERY VALIDATION REQUIREMENTS" in instructions
-        assert "SELECT, INSERT" in instructions
+        assert "INSERT, SELECT" in instructions  # sorted order
         assert "MUST end with a semicolon" in instructions
         assert "Maximum query length: 1000" in instructions

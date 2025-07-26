@@ -85,7 +85,7 @@ class TestXMLValidator:
 
         assert result.is_valid
         assert result.metadata["root_tag"] == "catalog"
-        assert result.metadata["total_elements"] == 6
+        assert result.metadata["total_elements"] == 7  # catalog + book + title + author + name + email + price
 
     def test_xml_with_namespaces(self):
         """Test XML with namespace declarations."""
@@ -191,6 +191,10 @@ class TestXMLValidator:
 
         # With XSD schema
         if HAS_LXML:
-            validator = XMLValidator(xsd_schema="<schema>...</schema>")
+            xsd_schema = """<?xml version="1.0"?>
+            <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                <xs:element name="root" type="xs:string"/>
+            </xs:schema>"""
+            validator = XMLValidator(xsd_schema=xsd_schema)
             description = validator.get_validator_description()
             assert "XSD schema" in description

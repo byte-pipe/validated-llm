@@ -20,7 +20,7 @@ from .regex import RegexValidator
 from .sql import SQLValidator
 from .style import StyleValidator
 from .syntax import SyntaxValidator
-from .test import TestValidator
+from .test import UnitTestValidator
 from .url import URLValidator
 from .xml import XMLValidator
 from .yaml import YAMLValidator
@@ -50,7 +50,7 @@ __all__ = [
     "SQLValidator",
     "StyleValidator",
     "SyntaxValidator",
-    "TestValidator",
+    "UnitTestValidator",
     "URLValidator",
     "XMLValidator",
     "YAMLValidator",

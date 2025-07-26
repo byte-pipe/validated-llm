@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 from validated_llm.base_validator import BaseValidator, ValidationResult
 
 
-class TestValidator(BaseValidator):
+class UnitTestValidator(BaseValidator):
     """Validator for test code quality and completeness.
 
     This validator checks that generated test code follows best practices:
@@ -58,7 +58,7 @@ class TestValidator(BaseValidator):
             "imports": ["unittest", "pytest", "nose2", "mock", "unittest.mock"],
         },
         "javascript": {
-            "test_patterns": [r"^test\s+", r"it\s*\(", r"describe\s*\("],
+            "test_patterns": [r"test\s*\(", r"it\s*\(", r"describe\s*\("],
             "assertion_patterns": [
                 r"expect\(",
                 r"assert\.",
@@ -86,9 +86,9 @@ class TestValidator(BaseValidator):
         "go": {
             "test_patterns": [r"^Test\w+", r"func\s+Test\w+"],
             "assertion_patterns": [
-                r"t\.Error\(",
-                r"t\.Fatal\(",
-                r"t\.Fail\(",
+                r"t\.Error",  # Matches t.Error, t.Errorf, etc.
+                r"t\.Fatal",  # Matches t.Fatal, t.Fatalf, etc.
+                r"t\.Fail",  # Matches t.Fail, t.FailNow, etc.
                 r"assert\.",
                 r"require\.",
             ],

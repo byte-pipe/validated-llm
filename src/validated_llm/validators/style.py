@@ -44,10 +44,10 @@ class StyleValidator(BaseValidator):
             "isort": {"command": ["isort", "-"], "check_command": ["isort", "--check", "-"]},
         },
         "javascript": {
-            "prettier": {"command": ["prettier", "--stdin-filepath", "file.js"], "check_command": ["prettier", "--check", "--stdin-filepath", "file.js"]},
+            "prettier": {"command": ["prettier", "--no-config", "--stdin-filepath", "file.js"], "check_command": ["prettier", "--no-config", "--check", "--stdin-filepath", "file.js"]},
         },
         "typescript": {
-            "prettier": {"command": ["prettier", "--stdin-filepath", "file.ts"], "check_command": ["prettier", "--check", "--stdin-filepath", "file.ts"]},
+            "prettier": {"command": ["prettier", "--no-config", "--stdin-filepath", "file.ts"], "check_command": ["prettier", "--no-config", "--check", "--stdin-filepath", "file.ts"]},
         },
         "go": {
             "gofmt": {"command": ["gofmt"], "check_command": None},

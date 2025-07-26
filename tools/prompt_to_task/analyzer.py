@@ -169,10 +169,16 @@ class PromptAnalyzer:
 
     def _extract_template_variables(self, prompt_text: str) -> List[str]:
         """Extract template variables like {variable} from prompt."""
+        # First, replace double braces {{}} with placeholders to ignore them
+        # This handles escaped braces that shouldn't be treated as variables
+        text = prompt_text.replace("{{", "<<DOUBLE_OPEN>>").replace("}}", "<<DOUBLE_CLOSE>>")
+
         # More strict pattern to avoid matching JSON content
-        # Only match single words or underscore-separated words
-        pattern = r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}"
-        matches = re.findall(pattern, prompt_text)
+        # Allow alphanumeric, underscore, and Unicode word characters
+        # But must start with a letter or underscore (not a number)
+        # Don't allow special regex characters like *, [], .
+        pattern = r"\{([a-zA-Z_\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff][a-zA-Z0-9_\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff]*)\}"
+        matches = re.findall(pattern, text)
 
         # Clean up variable names and remove duplicates
         variables = []
@@ -192,7 +198,10 @@ class PromptAnalyzer:
         Returns:
             Tuple of (format_name, confidence_score)
         """
-        text_lower = prompt_text.lower()
+        # Remove template variables from text to avoid false positives
+        # Replace {variable_name} with placeholder to not trigger format detection
+        text_without_vars = re.sub(r"\{[^}]+\}", "VAR", prompt_text)
+        text_lower = text_without_vars.lower()
 
         # Count indicators for each format
         json_score = self._count_indicators(text_lower, self.json_indicators)

@@ -131,15 +131,15 @@ func add(a, b int) int {
         validator = StyleValidator(language="rust", formatter="rustfmt")
 
         valid_rust = """fn factorial(n: u32) -> u32 {
-    match n {
-        0 | 1 => 1,
-        _ => n * factorial(n - 1),
-    }
+	match n {
+		0 | 1 => 1,
+		_ => n * factorial(n - 1),
+	}
 }
 
 struct Point {
-    x: f64,
-    y: f64,
+	x: f64,
+	y: f64,
 }
 """
 

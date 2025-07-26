@@ -191,7 +191,6 @@ class SQLValidator(BaseValidator):
             # Check for semicolon requirement
             if self.require_semicolon and not query.rstrip().endswith(";"):
                 query_warnings.append(f"Query {i+1} should end with semicolon")
-                warnings.extend(query_warnings)
 
             # Detect statement type
             statement_type = self._detect_statement_type(query)
@@ -230,7 +229,7 @@ class SQLValidator(BaseValidator):
         queries = []
 
         # Check for SQL in code blocks
-        code_block_pattern = r"```(?:sql)?\s*\n(.*?)\n```"
+        code_block_pattern = r"```(?:sql)?\s*\n(.*?)\n\s*```"
         code_blocks = re.findall(code_block_pattern, output, re.DOTALL | re.IGNORECASE)
 
         if code_blocks:
@@ -316,7 +315,11 @@ class SQLValidator(BaseValidator):
         """Validate SQL syntax using appropriate method for dialect."""
         errors = []
 
-        if self.dialect == "sqlite":
+        # Always run basic syntax validation first
+        errors.extend(self._basic_syntax_validation(query))
+
+        # If basic validation passed and dialect is sqlite, do deeper validation
+        if not errors and self.dialect == "sqlite":
             # Use sqlite3 to check syntax
             try:
                 conn = sqlite3.connect(":memory:")
@@ -332,9 +335,6 @@ class SQLValidator(BaseValidator):
                     # Some errors might be due to missing tables, which is OK for validation
                     if "no such table" not in error_msg.lower():
                         errors.append(f"SQL validation error: {error_msg}")
-        else:
-            # Basic syntax validation for other dialects
-            errors.extend(self._basic_syntax_validation(query))
 
         return errors
 

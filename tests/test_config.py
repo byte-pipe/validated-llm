@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.validated_llm.config import ConfigLoader, ValidatedLLMConfig, create_sample_config, get_config, get_task_config, get_validator_config, load_config
-from src.validated_llm.validators.config import ConfigValidator
+from validated_llm.config import ConfigLoader, ValidatedLLMConfig, create_sample_config, get_config, get_task_config, get_validator_config, load_config
+from validated_llm.validators.config import ConfigValidator
 
 
 class TestValidatedLLMConfig:

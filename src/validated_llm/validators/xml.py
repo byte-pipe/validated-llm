@@ -4,7 +4,7 @@ XML validator for validating XML syntax and optional schema validation.
 
 import xml.etree.ElementTree as ET
 from io import StringIO
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from xml.parsers.expat import ExpatError
 
 try:
@@ -87,13 +87,13 @@ class XMLValidator(BaseValidator):
         llm_output = output
         errors = []
         warnings = []
-        metadata = {}
+        metadata: Dict[str, Any] = {}
 
         # Try to parse XML with ElementTree (standard library)
         try:
             root = ET.fromstring(llm_output.strip())
             metadata["root_tag"] = root.tag
-            metadata["total_elements"] = str(len(list(root.iter())))
+            metadata["total_elements"] = len(list(root.iter()))
 
             # Check root element if required
             if self.require_root_element and root.tag != self.require_root_element:
@@ -123,7 +123,7 @@ class XMLValidator(BaseValidator):
                         error_msg = f"Schema validation error at line {error.line}: {error.message}"
                         errors.append(error_msg)
                 else:
-                    metadata["schema_valid"] = "True"
+                    metadata["schema_valid"] = True
 
             except etree.XMLSyntaxError as e:
                 errors.append(f"XML parsing error for schema validation: {str(e)}")

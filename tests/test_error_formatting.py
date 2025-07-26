@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.validated_llm.error_formatting import ContextExtractor, EnhancedValidationError, ErrorCategory, ErrorFormatter, ErrorLocation, ErrorSeverity, create_enhanced_error
+from validated_llm.error_formatting import ContextExtractor, EnhancedValidationError, ErrorCategory, ErrorFormatter, ErrorLocation, ErrorSeverity, create_enhanced_error
 
 
 class TestErrorLocation:

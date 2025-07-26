@@ -5,8 +5,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.validated_llm.base_validator import ValidationResult
-from src.validated_llm.validators.composite import CompositeValidator, LogicOperator, ValidationChain
+from validated_llm.base_validator import ValidationResult
+from validated_llm.validators.composite import CompositeValidator, LogicOperator, ValidationChain
 
 
 class MockValidator:

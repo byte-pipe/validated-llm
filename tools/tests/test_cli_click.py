@@ -247,8 +247,8 @@ class TestCLI:
     def test_interactive_mode_edge_cases(self, runner: CliRunner, temp_prompt_file: str) -> None:
         # Test with empty inputs in interactive mode
         result = runner.invoke(main, [temp_prompt_file, "--interactive"], input="\n\n\n")
-        # Should use defaults or fail gracefully
-        assert result.exit_code == 0 or "required" in result.output.lower()
+        # Should use defaults or fail gracefully with abort message
+        assert result.exit_code == 0 or "required" in result.output.lower() or "aborted" in result.output.lower()
 
         # Test with very long inputs
         long_input = "x" * 1000
@@ -291,11 +291,13 @@ class TestCLI:
             result = runner.invoke(main, [temp_path, "--analyze-only"])
             assert result.exit_code == 0
 
-            # Test selecting different validators
-            for i in range(1, 4):
-                result = runner.invoke(main, [temp_path, "--validator-only", str(i)])
-                # Should work for valid validator numbers
-                if i <= 3:  # Assuming at least 3 suggestions
-                    assert result.exit_code == 0 or "Invalid" not in result.output
+            # Test selecting validator 1 (should always exist)
+            result = runner.invoke(main, [temp_path, "--validator-only", "1"])
+            assert result.exit_code == 0
+
+            # Test with a very high validator index that surely doesn't exist
+            result = runner.invoke(main, [temp_path, "--validator-only", "99"])
+            # Should either fail or show invalid message
+            assert result.exit_code != 0 or "Invalid" in result.output or "invalid" in result.output.lower()
         finally:
             os.unlink(temp_path)

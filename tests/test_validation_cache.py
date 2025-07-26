@@ -12,6 +12,14 @@ from validated_llm.cached_validator import CachedValidatorMixin, make_cached_val
 from validated_llm.validation_cache import ValidationCache, clear_global_cache, configure_global_cache, get_global_cache
 
 
+@pytest.fixture(autouse=True)
+def clear_cache():
+    """Clear global cache before each test to ensure isolation."""
+    clear_global_cache()
+    yield
+    clear_global_cache()
+
+
 class SimpleTestValidator(BaseValidator):
     """Simple test validator for cache testing."""
 

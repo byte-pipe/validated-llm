@@ -230,7 +230,10 @@ class SyntaxValidator(BaseValidator):
                 f.write(code)
                 temp_path = f.name
 
-            result = subprocess.run(["rustc", "--crate-type", "lib", "--emit=mir", "-o", "/dev/null", temp_path], capture_output=True, text=True, timeout=self.timeout)
+            # Create a temp directory for rust output
+            with tempfile.TemporaryDirectory() as output_dir:
+                output_path = Path(output_dir) / "output.mir"
+                result = subprocess.run(["rustc", "--crate-type", "lib", "--emit=mir", "-o", str(output_path), temp_path], capture_output=True, text=True, timeout=self.timeout)
 
             Path(temp_path).unlink()
 

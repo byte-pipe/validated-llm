@@ -1,18 +1,18 @@
 """
-Tests for the TestValidator.
+Tests for the UnitTestValidator.
 """
 
 import pytest
 
-from validated_llm.validators.test import TestValidator
+from validated_llm.validators.test import UnitTestValidator
 
 
-class TestTestValidator:
-    """Test suite for TestValidator."""
+class TestUnitTestValidator:
+    """Test suite for UnitTestValidator."""
 
     def test_valid_python_unittest(self):
         """Test validation of proper Python unittest code."""
-        validator = TestValidator(language="python")
+        validator = UnitTestValidator(language="python")
 
         valid_test_code = """import unittest
 
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     def test_valid_python_pytest(self):
         """Test validation of proper pytest code."""
-        validator = TestValidator(language="python")
+        validator = UnitTestValidator(language="python")
 
         pytest_code = """import pytest
 
@@ -66,7 +66,7 @@ def test_factorial_edge_cases():
 
     def test_insufficient_test_functions(self):
         """Test detection of insufficient test functions."""
-        validator = TestValidator(language="python", min_test_functions=3)
+        validator = UnitTestValidator(language="python", min_test_functions=3)
 
         insufficient_code = """import unittest
 
@@ -80,7 +80,7 @@ def test_only_one():
 
     def test_no_assertions(self):
         """Test detection of tests without assertions."""
-        validator = TestValidator(language="python")
+        validator = UnitTestValidator(language="python")
 
         no_assertions_code = """def test_something():
     x = 1 + 1
@@ -93,7 +93,7 @@ def test_only_one():
 
     def test_naming_convention_validation(self):
         """Test validation of test naming conventions."""
-        validator = TestValidator(language="python", check_naming=True)
+        validator = UnitTestValidator(language="python", check_naming=True)
 
         bad_naming_code = """import unittest
 
@@ -109,7 +109,7 @@ def another_function():  # Not a test function name
 
     def test_edge_case_requirement(self):
         """Test requirement for edge case testing."""
-        validator = TestValidator(language="python", require_edge_cases=True)
+        validator = UnitTestValidator(language="python", require_edge_cases=True)
 
         no_edge_cases_code = """import unittest
 
@@ -122,7 +122,7 @@ def test_normal_case():
 
     def test_error_test_requirement(self):
         """Test requirement for error testing."""
-        validator = TestValidator(language="python", require_error_tests=True)
+        validator = UnitTestValidator(language="python", require_error_tests=True)
 
         no_error_tests_code = """import unittest
 
@@ -136,7 +136,7 @@ def test_normal_operation():
 
     def test_javascript_jest_validation(self):
         """Test validation of JavaScript Jest tests."""
-        validator = TestValidator(language="javascript")
+        validator = UnitTestValidator(language="javascript")
 
         jest_code = """describe('Calculator', () => {
     test('should add two numbers', () => {
@@ -162,7 +162,7 @@ def test_normal_operation():
 
     def test_java_junit_validation(self):
         """Test validation of Java JUnit tests."""
-        validator = TestValidator(language="java")
+        validator = UnitTestValidator(language="java")
 
         junit_code = """import org.junit.Test;
 import static org.junit.Assert.*;
@@ -197,7 +197,7 @@ public class CalculatorTest {
 
     def test_go_testing_validation(self):
         """Test validation of Go testing code."""
-        validator = TestValidator(language="go")
+        validator = UnitTestValidator(language="go")
 
         go_test_code = """package calculator
 
@@ -236,7 +236,7 @@ func TestDivideByZero(t *testing.T) {
 
     def test_documentation_requirement(self):
         """Test requirement for test documentation."""
-        validator = TestValidator(language="python", check_documentation=True)
+        validator = UnitTestValidator(language="python", check_documentation=True)
 
         undocumented_test = '''import unittest
 
@@ -254,7 +254,7 @@ def test_another_thing():
 
     def test_setup_teardown_requirement(self):
         """Test requirement for setup/teardown methods."""
-        validator = TestValidator(language="python", require_setup_teardown=True)
+        validator = UnitTestValidator(language="python", require_setup_teardown=True)
 
         no_setup_code = """import unittest
 
@@ -268,7 +268,7 @@ def test_something():
 
     def test_minimum_assertions_per_test(self):
         """Test minimum assertions per test requirement."""
-        validator = TestValidator(language="python", min_assertions_per_test=2)
+        validator = UnitTestValidator(language="python", min_assertions_per_test=2)
 
         few_assertions_code = """import unittest
 
@@ -282,13 +282,13 @@ def test_insufficient_assertions():
     def test_unsupported_language(self):
         """Test handling of unsupported languages."""
         with pytest.raises(ValueError) as exc_info:
-            TestValidator(language="pascal")
+            UnitTestValidator(language="pascal")
 
         assert "Unsupported language" in str(exc_info.value)
 
     def test_syntax_error_handling(self):
         """Test handling of syntax errors in test code."""
-        validator = TestValidator(language="python")
+        validator = UnitTestValidator(language="python")
 
         invalid_code = """def test_broken(
     assert True  # Missing closing parenthesis
@@ -300,7 +300,7 @@ def test_insufficient_assertions():
 
     def test_empty_code(self):
         """Test validation of empty test code."""
-        validator = TestValidator(language="python")
+        validator = UnitTestValidator(language="python")
 
         result = validator.validate("")
         assert not result.is_valid
@@ -308,7 +308,7 @@ def test_insufficient_assertions():
 
     def test_comprehensive_test_validation(self):
         """Test comprehensive validation with all requirements."""
-        validator = TestValidator(language="python", min_test_functions=2, min_assertions_per_test=2, require_edge_cases=True, require_error_tests=True, check_documentation=True)
+        validator = UnitTestValidator(language="python", min_test_functions=2, min_assertions_per_test=2, require_edge_cases=True, require_error_tests=True, check_documentation=True)
 
         comprehensive_code = '''import unittest
 import pytest

@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-print-divider "version bump"
+echo "version bump"
 poetry version patch || exit 1
 current_version=$(poetry version -s) || exit 1
 package_name=$(poetry version | cut -d ' ' -f 1)
@@ -7,16 +7,16 @@ sed -i '' "s/__version__ = \".*\"/__version__ = \"$current_version\"/" version.p
 # git add --all || exit 1
 # git commit -m "Bump version to $current_version and update version.py" || exit 1
 git-amend
-print-divider "build"
+echo "build"
 poetry lock && poetry install || exit 1
 poetry build --clean || exit 1
-print-divider "pip install"
+echo "pip install"
 pip install -e . || exit 1
-print-divider "pip list"
+echo "pip list"
 pip list --editable | grep $package_name
-print-divider "pipx uninstall"
+echo "pipx uninstall"
 pipx uninstall $package_name
-print-divider "pipx install"
+echo "pipx install"
 pipx install ./dist/validated_llm-$current_version*.whl --force || exit 1
-print-divider "pipx list"
+echo "pipx list"
 pipx list | grep $package_name
