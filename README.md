@@ -9,6 +9,15 @@
 
 `validated-llm` provides a robust framework for validating language model outputs with automatic retry mechanisms. It's designed for applications where you need reliable, structured responses from LLMs.
 
+### Why validated-llm?
+
+Unlike other solutions, validated-llm offers:
+- **Clean separation of concerns** - Validators independent from LLM interaction
+- **Framework agnostic** - Works with any LLM (OpenAI, Anthropic, Ollama)
+- **Flexible validation** - Not tied to specific schema formats
+- **Comprehensive debugging** - Detailed execution logs and attempt tracking
+- **Simple API** - Just `execute()` with template, validator, and data
+
 ## Key Features
 
 - Automatic Retry Logic: Handles failed validations with configurable retry attempts
