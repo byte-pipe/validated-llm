@@ -95,7 +95,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
-    "integration: marks tests as integration tests"
+    "integration: marks tests as integration tests",
+    "asyncio: marks tests as asyncio tests"
 ]
 addopts = [
     "--strict-markers",
