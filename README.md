@@ -31,36 +31,46 @@
 ### Basic Usage
 
 ```python
-from validated_llm import ValidationLoop, BaseTask
-from pydantic import BaseModel
-from typing import List
-class StoryScene(BaseModel):
-    title: str
-    description: str
-    characters: List[str]
-class StoryToScenesTask(BaseTask):
-    def get_prompt(self, story_text: str) -> str:
-        return f"""
-        Convert this story into 3-5 scenes:
-        {story_text}
-        Return as JSON with scenes array containing title, description, and characters.
-        """
-    def validate_response(self, response_text: str) -> bool:
-        try:
-            data = json.loads(response_text)
-            scenes = [StoryScene(**scene) for scene in data['scenes']]
-            return len(scenes) >= 3
-        except:
-            return False
-# Use the task
+from validated_llm import ValidationLoop
+from validated_llm.validators import JSONSchemaValidator
+
+# Define your validation schema
+schema = {
+    "type": "object",
+    "properties": {
+        "scenes": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "characters": {"type": "array", "items": {"type": "string"}}
+                },
+                "required": ["title", "description", "characters"]
+            }
+        }
+    },
+    "required": ["scenes"]
+}
+
+# Create validation loop with built-in LLM provider
 validator = ValidationLoop(
-    model="gpt-4",
+    vendor="openai",  # or "ollama", "anthropic"
+    model="gpt-4o",
+    api_key="your-openai-api-key",
     max_retries=3,
     temperature=0.7
 )
-task = StoryToScenesTask()
-result = validator.run_task(task, "Once upon a time...")
-print(result)  # Validated JSON response
+
+# Execute with validation
+result = validator.execute(
+    prompt_template="Convert this story into 3-5 scenes: {story}. Return as JSON with scenes array.",
+    validator=JSONSchemaValidator(schema),
+    input_data={"story": "Once upon a time..."}
+)
+
+print(result['output'])  # Validated JSON response
 ```
 
 ### Built-in Tasks

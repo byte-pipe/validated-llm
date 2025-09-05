@@ -2,13 +2,17 @@
 name = "validated-llm"
 version = "0.1.12"
 description = "LLM output validation with retry loops - ensure your language model responses meet requirements"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["validated-llm contributors"]
 readme = "README.md"
+homepage = "https://github.com/your-username/validated-llm"
+repository = "https://github.com/your-username/validated-llm"
+documentation = "https://github.com/your-username/validated-llm/blob/main/README.md"
+license = "MIT"
 packages = [
     {include = "validated_llm", from = "src"},
     {include = "tools"}
 ]
-keywords = ["llm", "validation", "ai", "language-model", "retry-loop", "openai"]
+keywords = ["llm", "validation", "ai", "language-model", "retry-loop", "self-correcting", "reliability", "openai", "anthropic", "ollama"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
