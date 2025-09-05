@@ -4,9 +4,9 @@ version = "0.1.12"
 description = "LLM output validation with retry loops - ensure your language model responses meet requirements"
 authors = ["validated-llm contributors"]
 readme = "README.md"
-homepage = "https://github.com/your-username/validated-llm"
-repository = "https://github.com/your-username/validated-llm"
-documentation = "https://github.com/your-username/validated-llm/blob/main/README.md"
+homepage = "https://github.com/byte-pipe/validated-llm"
+repository = "https://github.com/byte-pipe/validated-llm"
+documentation = "https://github.com/byte-pipe/validated-llm/blob/main/README.md"
 license = "MIT"
 packages = [
     {include = "validated_llm", from = "src"},
