@@ -12,11 +12,10 @@ import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from chatbot.chatbot import ChatBot
-
 from .async_validator import AsyncBaseValidator, AsyncFunctionValidator, AsyncValidatorAdapter
 from .base_validator import BaseValidator, FunctionValidator, ValidationResult
 from .config import ValidatedLLMConfig, get_config
+from .llm_providers import LLMProvider, OllamaProvider, OpenAIProvider
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,9 @@ class AsyncValidationLoop:
         default_max_retries: Optional[int] = None,
         config: Optional[ValidatedLLMConfig] = None,
         max_concurrent_validations: int = 10,
-    ):
+        llm_provider: Optional[LLMProvider] = None,
+        **provider_kwargs: Any,
+    ) -> None:
         """
         Initialize the async validation loop.
 
@@ -46,6 +47,8 @@ class AsyncValidationLoop:
             default_max_retries: Default maximum number of retry attempts (defaults to config value)
             config: Configuration object (defaults to loading from config files)
             max_concurrent_validations: Maximum number of concurrent validation operations
+            llm_provider: Custom LLM provider instance (overrides vendor/model)
+            **provider_kwargs: Additional parameters for LLM provider (api_key, base_url, etc.)
         """
         # Load config if not provided
         self.config = config or get_config()
@@ -56,11 +59,43 @@ class AsyncValidationLoop:
         self.default_max_retries = default_max_retries or self.config.max_retries
         self.max_concurrent_validations = max_concurrent_validations
 
+        # Initialize LLM provider
+        if llm_provider is not None:
+            self.llm_provider = llm_provider
+        else:
+            self.llm_provider = self._create_llm_provider(**provider_kwargs)
+
         # Semaphore to limit concurrent operations
         self._validation_semaphore = asyncio.Semaphore(max_concurrent_validations)
 
         # Validator registry
         self.validator_registry: Dict[str, Union[AsyncBaseValidator, BaseValidator]] = {}
+
+    def _create_llm_provider(self, **provider_kwargs: Any) -> LLMProvider:
+        """Create an LLM provider based on vendor configuration."""
+        # Extract provider parameters from config and kwargs
+        provider_params = {
+            "model": self.model,
+            "temperature": self.config.llm_temperature,
+            **provider_kwargs,
+        }
+
+        if self.config.llm_max_tokens:
+            provider_params["max_tokens"] = self.config.llm_max_tokens
+
+        # Create provider based on vendor
+        if self.vendor == "openai":
+            return OpenAIProvider(**provider_params)
+        elif self.vendor == "ollama":
+            return OllamaProvider(**provider_params)
+        elif self.vendor == "anthropic":
+            # Use OpenAI provider with Anthropic base URL
+            provider_params["base_url"] = "https://api.anthropic.com/v1"
+            return OpenAIProvider(**provider_params)
+        else:
+            # Default to OpenAI provider for unknown vendors
+            logger.warning(f"Unknown vendor '{self.vendor}', defaulting to OpenAI provider")
+            return OpenAIProvider(**provider_params)
 
     def register_validator(self, name: str, validator: Union[AsyncBaseValidator, BaseValidator, Callable]) -> None:
         """
@@ -130,20 +165,8 @@ class AsyncValidationLoop:
 
         logger.info(f"Starting async LLM validation loop with validator: {async_validator.name}")
 
-        # Create ChatBot instance with comprehensive system prompt
+        # Build comprehensive system prompt for LLM provider
         system_prompt = self._build_system_prompt(prompt_template, async_validator, input_data)
-
-        # Use config values for ChatBot initialization
-        chatbot_kwargs = {
-            "prompt": system_prompt,
-            "vendor": self.vendor,
-            "model": self.model,
-            "temperature": self.config.llm_temperature,
-        }
-        if self.config.llm_max_tokens:
-            chatbot_kwargs["max_tokens"] = self.config.llm_max_tokens
-
-        chatbot = ChatBot(**chatbot_kwargs)
 
         # Initialize validation_result for proper scoping
         validation_result: Optional[ValidationResult] = None
@@ -156,7 +179,7 @@ class AsyncValidationLoop:
                 # For first attempt, ask for the initial task
                 if attempt == 0:
                     task_prompt = prompt_template.format(**input_data)
-                    llm_response = await self._chat_async(chatbot, task_prompt)
+                    llm_response = await self._generate_async(system_prompt, task_prompt)
                 else:
                     # For subsequent attempts, provide feedback
                     if validation_result is not None:
@@ -168,7 +191,7 @@ Please provide a corrected response that addresses these issues."""
                     else:
                         retry_prompt = "Please provide a corrected response."
 
-                    llm_response = await self._chat_async(chatbot, retry_prompt)
+                    llm_response = await self._generate_async(system_prompt, retry_prompt)
 
                 if debug and debug_info is not None:
                     debug_info.append(
@@ -300,18 +323,17 @@ Please provide a corrected response that addresses these issues."""
         else:
             raise TypeError(f"Unsupported validator type: {type(resolved_validator)}")
 
-    async def _chat_async(self, chatbot: ChatBot, message: str) -> str:
+    async def _generate_async(self, system_prompt: str, user_message: str) -> str:
         """
-        Async wrapper for ChatBot.ask().
+        Async wrapper for LLM provider generation.
 
-        Note: Currently ChatBot.ask() is synchronous, so we run it in a thread pool.
-        If ChatBot adds native async support, this can be updated.
+        Runs the LLM provider's generate method in a thread pool to maintain async interface.
         """
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, chatbot.ask, message)
+        return await loop.run_in_executor(None, self.llm_provider.generate, system_prompt, user_message)
 
     def _build_system_prompt(self, prompt_template: str, validator: AsyncBaseValidator, input_data: Dict[str, Any]) -> str:
-        """Build comprehensive system prompt for ChatBot initialization."""
+        """Build comprehensive system prompt for LLM provider."""
         # Get validation instructions
         validation_instructions = validator.get_validation_instructions()
 

@@ -33,7 +33,7 @@ pydantic = "^2.0.0"
 pyyaml = "^6.0"
 typing-extensions = "^4.0.0"
 jsonschema = "^4.0.0"
-chatbot = { path = "/Users/a/data/projects/1-ai/chatbot", develop = true }
+# Removed chatbot dependency - replaced with built-in LLM providers
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -78,7 +78,7 @@ warn_unreachable = true
 strict_equality = true
 
 [[tool.mypy.overrides]]
-module = ["chatbot.chatbot", "pytest", "jsonschema", "langchain", "langchain.prompts"]
+module = ["pytest", "jsonschema", "langchain", "langchain.prompts"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

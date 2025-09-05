@@ -21,6 +21,9 @@ from .code_formats import CodeExporter, CodeFormatter, CodeImporter
 from .enhanced_validation import EnhancedValidationResult, ErrorCategory, ErrorSeverity
 from .enhanced_validation import ValidationError as EnhancedValidationError
 
+# LLM providers
+from .llm_providers import LLMProvider, OllamaProvider, OpenAIProvider
+
 # Import specific task classes
 from .tasks.base_task import BaseTask
 from .tasks.csv_generation import CSVGenerationTask
@@ -61,6 +64,10 @@ __all__ = [
     "AsyncCompositeValidator",
     "AsyncValidatorAdapter",
     "ValidationResult",
+    # LLM providers
+    "LLMProvider",
+    "OpenAIProvider",
+    "OllamaProvider",
     # Performance optimization
     "ValidationCache",
     "get_global_cache",

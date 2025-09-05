@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-`validated-llm` is a Python package that provides robust LLM output validation with automatic retry loops. It uses the ChatBot library for LLM communication and implements a validation-first approach where LLM responses are automatically validated and improved through feedback loops.
+`validated-llm` is a Python package that provides robust LLM output validation with automatic retry loops. It uses the ChatBot library for LLM communication and implements a validation-first approach where responses are automatically validated and improved through feedback loops.
 
 ## Key Architecture Components
 
@@ -31,25 +31,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Common Development Commands
 
 ```bash
-poetry install # Install dependencies
-poetry run pytest # Run tests (integration tests require actual LLM access)
-poetry run pytest --cov=src tests/ # Run with coverage
-poetry run pytest tests/test_llm_validation_integration.py # Run specific integration test (may timeout if LLM unavailable)
-poetry run black src/ tests/ # Format code (line length 222 per pyproject.toml)
-poetry run isort src/ tests/
-poetry run mypy src/ # Type checking
-poetry run flake8 src/ tests/ # Lint code
-poetry build # Build package
+# Install dependencies
+poetry install
+
+# Run tests
+poetry run pytest                                           # Run all tests
+poetry run pytest tests/test_llm_validation_integration.py  # Run specific test (may timeout if LLM unavailable)
+poetry run pytest -k test_specific_function                 # Run specific test function
+poetry run pytest --cov=src tests/                         # Run with coverage
+poetry run pytest -m "not integration"                     # Skip integration tests
+
+# Code quality checks (required after changes)
+poetry run mypy .                    # Type checking
+poetry run black src/ tests/ tools/  # Format code (line length 222)
+poetry run isort src/ tests/ tools/  # Sort imports
+poetry run flake8 src/ tests/       # Lint code (if enabled)
+pre-commit run --all-files           # Run all pre-commit hooks
+
+# Build and package
+poetry build                         # Build package
+
+# CLI tools testing
+poetry run validated-llm-prompt2task --help  # Test prompt converter CLI
+poetry run validated-llm-config --help       # Test config CLI
 ```
 
 ## Core Data Flow
 
-- Task defines prompt_template and validator_class
-- ValidationLoop.execute() builds comprehensive system prompt including validator source code
-- ChatBot initialized with system prompt including validation instructions
-- LLM generates response, ValidationLoop extracts and validates output
-- If validation fails, errors are sent back as feedback for retry
-- Process repeats until success or max_retries exceeded
+1. Task defines prompt_template and validator_class
+2. ValidationLoop.execute() builds comprehensive system prompt including validator source code
+3. ChatBot initialized with system prompt including validation instructions
+4. LLM generates response, ValidationLoop extracts and validates output
+5. If validation fails, errors are sent back as feedback for retry
+6. Process repeats until success or max_retries exceeded
 
 ## Key Implementation Details
 
@@ -58,25 +72,36 @@ poetry build # Build package
 - Uses ChatBot library instead of direct API calls
 - Default model: "gemma3:27b" (Ollama model)
 - ChatBot handles system prompts and conversational context for feedback loops
+- Local chatbot dependency at `/Users/a/data/projects/1-ai/chatbot`
 
 ### Validation Architecture
 
 - Validators can include their source code in prompts using `get_source_code()`
 - ValidationResult provides structured feedback (`errors`, `warnings`, `metadata`)
 - FunctionValidator allows wrapping simple functions as full validators
+- 16 built-in validators: JSON Schema, XML, YAML, Email, Phone, URL, Markdown, DateTime, Range, Regex, SQL, Syntax, Style, Test, Composite, Documentation
 
 ### Task-Based Design
 
 - Tasks are complete workflows (prompt + validator) rather than separate components
 - Built-in tasks handle common patterns (JSON schema, CSV, story processing)
 - Tasks can customize prompt data preparation and validator configuration
+- Template library with 29 pre-built templates across 6 categories
+
+### Plugin System
+
+- Custom validators can be loaded as plugins
+- Plugin discovery from directories
+- Validation and testing tools for plugins
 
 ## Testing Approach
 
-- Single comprehensive integration test file: `tests/test_llm_validation_integration.py`
+- Main integration test: `tests/test_llm_validation_integration.py`
+- Tool tests in `tools/tests/` directory
 - Tests actual LLM integration using ChatBot with real model calls
 - Validates both successful generation and proper error handling/feedback
 - Performance and error handling edge case testing included
+- Use `pytest -m "not integration"` to skip LLM-dependent tests
 
 ## Important Configuration Notes
 
@@ -85,11 +110,12 @@ poetry build # Build package
 - ChatBot dependency is a local development dependency from parallel project
 - No exceptions.py file exists - exceptions defined in `__init__.py`
 - MyPy ignores missing imports for `chatbot.chatbot` and `pytest`
+- Pre-commit hooks run mypy, black, and isort (flake8 commented out)
 
 ## Fixed Issues
 
 - Added missing `jsonschema` dependency for JSON schema validation
-- Added type stubs: `types-jsonschema`, `types-PyYAML`
+- Added type stubs: `types-jsonschema`, `types-PyYAML`, `types-lxml`, `lxml-stubs`
 - Fixed all import errors (`llm_validation` → `validated_llm`)
 - Added `integration` marker to pytest configuration
 - Fixed MyPy type annotations throughout codebase
