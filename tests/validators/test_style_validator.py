@@ -130,21 +130,26 @@ func add(a, b int) int {
         """Test Rust formatting with rustfmt."""
         validator = StyleValidator(language="rust", formatter="rustfmt")
 
+        # Use rustfmt-compliant code (tabs, as rustfmt prefers)
         valid_rust = """fn factorial(n: u32) -> u32 {
-	match n {
-		0 | 1 => 1,
-		_ => n * factorial(n - 1),
-	}
+\tmatch n {
+\t\t0 | 1 => 1,
+\t\t_ => n * factorial(n - 1),
+\t}
 }
 
 struct Point {
-	x: f64,
-	y: f64,
+\tx: f64,
+\ty: f64,
 }
 """
 
         result = validator.validate(valid_rust)
-        assert result.is_valid or len(result.warnings) > 0
+        # If rustfmt is not available, expect warnings
+        if len(result.warnings) > 0 and "not available" in result.warnings[0]:
+            assert result.is_valid
+        else:
+            assert result.is_valid or len(result.warnings) > 0
 
     def test_java_google_format(self):
         """Test Java formatting with google-java-format."""
