@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "validated-llm"
-version = "0.1.15"
+version = "0.1.16"
 description = "LLM output validation with retry loops - ensure your language model responses meet requirements"
 authors = ["validated-llm contributors"]
 readme = "README.md"
