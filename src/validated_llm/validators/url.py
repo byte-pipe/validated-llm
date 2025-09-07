@@ -170,7 +170,7 @@ class URLValidator(BaseValidator):
             True if reachable, False otherwise
         """
         try:
-            import requests  # type: ignore
+            import requests  # type: ignore[import-untyped]
 
             response = requests.head(url, timeout=5, allow_redirects=True)
             return bool(response.status_code < 400)

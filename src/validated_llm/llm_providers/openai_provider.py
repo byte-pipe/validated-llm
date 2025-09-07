@@ -3,7 +3,7 @@ OpenAI provider implementation.
 """
 
 import os
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 from openai import OpenAI
 
@@ -43,7 +43,7 @@ class OpenAIProvider(LLMProvider):
         self.extra_kwargs = kwargs
 
         # Initialize OpenAI client
-        client_kwargs = {}
+        client_kwargs: Dict[str, Any] = {}
         if api_key is not None:
             client_kwargs["api_key"] = api_key
         elif "OPENAI_API_KEY" in os.environ:

@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import click
-from code_generator import CodeGenerator
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -21,7 +20,9 @@ from rich.prompt import Confirm, Prompt
 from rich.syntax import Syntax
 from rich.table import Table
 from rich.tree import Tree
-from template_library import PromptTemplate, TemplateLibrary
+
+from .code_generator import TaskCodeGenerator
+from .template_library import PromptTemplate, TemplateLibrary
 
 console = Console()
 
