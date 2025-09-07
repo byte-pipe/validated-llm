@@ -48,7 +48,7 @@ class LLMError(Exception):
     """Raised when LLM API calls fail"""
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.14"
 __author__ = "validated-llm contributors"
 __email__ = "contact@example.com"
 

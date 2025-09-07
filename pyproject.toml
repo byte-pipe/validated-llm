@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "validated-llm"
-version = "0.1.14"
+version = "0.1.15"
 description = "LLM output validation with retry loops - ensure your language model responses meet requirements"
 authors = ["validated-llm contributors"]
 readme = "README.md"
@@ -83,7 +83,7 @@ warn_unreachable = true
 strict_equality = true
 
 [[tool.mypy.overrides]]
-module = ["pytest", "jsonschema", "langchain", "langchain.prompts"]
+module = ["pytest", "jsonschema"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
