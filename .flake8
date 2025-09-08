@@ -1,3 +1,5 @@
 [flake8]
 max-line-length = 222
 extend-ignore = E203,W503
+per-file-ignores =
+    tools/prompt_to_task/template_library.py:E501

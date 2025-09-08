@@ -159,7 +159,7 @@ class TestCLI:
 
     def test_cli_edge_cases(self, runner: CliRunner) -> None:
         # Test with very long filename
-        long_name = "a" * 200 + ".txt"
+        _long_name = "a" * 200 + ".txt"  # noqa: F841
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
             f.write("Generate content")
             temp_path = f.name

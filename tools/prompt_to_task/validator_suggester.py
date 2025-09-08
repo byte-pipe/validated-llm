@@ -4,7 +4,7 @@ based on prompt analysis results.
 """
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .analyzer import AnalysisResult
 

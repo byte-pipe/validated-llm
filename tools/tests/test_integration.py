@@ -3,7 +3,6 @@
 These tests verify the complete flow from prompt analysis to task code generation.
 """
 
-import os
 import tempfile
 from pathlib import Path
 
