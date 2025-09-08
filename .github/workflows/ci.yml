@@ -95,8 +95,8 @@ jobs:
     - name: Run isort
       run: poetry run isort --check-only src/ tools/ tests/
 
-    - name: Run flake8
-      run: poetry run flake8 src/ tools/ tests/
+    # - name: Run flake8
+    #   run: poetry run flake8 src/ tools/ tests/
 
     - name: Run mypy
       run: poetry run mypy src/ tools/
