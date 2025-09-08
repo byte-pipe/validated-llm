@@ -83,7 +83,7 @@ warn_unreachable = true
 strict_equality = true
 
 [[tool.mypy.overrides]]
-module = ["pytest", "jsonschema"]
+module = ["pytest", "jsonschema", "rich", "rich.*", "tqdm"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
