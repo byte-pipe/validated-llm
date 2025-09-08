@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v5
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -42,7 +42,7 @@ jobs:
     if: github.event_name == 'release' || github.event.inputs.test_pypi == 'false'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v5
 
     - name: Download artifacts
       uses: actions/download-artifact@v3
@@ -61,7 +61,7 @@ jobs:
     if: github.event.inputs.test_pypi == 'true'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v5
 
     - name: Download artifacts
       uses: actions/download-artifact@v3
